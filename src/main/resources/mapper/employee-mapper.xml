@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<mapper namespace="employee">
+
+    <!-- 게시글 저장 -->
+    <!-- value에 Dto 값들 넣어줌-->
+    <!-- resultType을 사용하면 매퍼 파일에서 복잡한 매핑 설정 없이 간단하게 매핑할 수 있습니다.-->
+    <!-- resultType은 select 쿼리에서 결과를 반환할 때 사용하는 속성이므로, insert,update와 delete에서는 resultType이 필요하지 않습니다.-->
+
+
+    <!-- ResultMap 정의 -->
+    <!-- column에는 실제 테이블 컬럼명-->
+    <!-- property에는 Dto변수-->
+    <resultMap id="EmployeeDtoMap" type="com.example.table.Dto.EmployeeDto">
+        <result column="id" property="id"/>
+        <result column="DEPT_NO" property="deptNo"/>
+        <result column="Employee_name" property="employeeName"/>
+        <result column="POSITION" property="position"/>
+        <result column="EMAIL" property="email"/>
+        <result column="Phone_NM" property="phoneNm"/>
+        <result column="createdAt" property="createdAt"/>
+        <result column="modifiedAt" property="modifiedAt"/>
+    </resultMap>
+
+    <!-- 1. 직원 등록-->
+    <insert id="save">
+        insert into employee(DEPT_NO, Employee_name, POSITION, EMAIL, Phone_NM, createdAt)
+        values(#{deptNo}, #{employeeName}, #{position}, #{email}, #{phoneNm}, NOW())
+    </insert>
+
+    <!-- 2. 직원 리스트 조회 (페이징) -->
+    <select id="findAllPaged" resultMap="EmployeeDtoMap">
+        select id,
+               DEPT_NO,
+               Employee_name,
+               POSITION,
+               EMAIL,
+               Phone_NM,
+               createdAt,
+               modifiedAt
+        from employee
+        order by id desc
+            limit #{limit} offset #{offset}
+    </select>
+
+    <!--  2-1.  검색어 조회-->
+
+
+    <!-- 2-1. 검색어 조회-->
+    <select id="searchEmployees" resultMap="EmployeeDtoMap">
+        select id,
+        DEPT_NO,
+        Employee_name,
+        POSITION,
+        EMAIL,
+        Phone_NM,
+        createdAt,
+        modifiedAt
+        from employee
+        where
+        <if test="searchType == 'all'">
+            (DEPT_NO like #{query}
+            or Employee_name like #{query}
+            or POSITION like #{query}
+            or EMAIL like #{query}
+            or date_format(modifiedAt, "%Y-%m-%d") like #{query})
+        </if>
+        <if test="searchType != 'all'">
+            <choose>
+                <when test="searchType == 'deptNo'">
+                    DEPT_NO like #{query}
+                </when>
+                <when test="searchType == 'employeeName'">
+                    Employee_name like #{query}
+                </when>
+                <when test="searchType == 'position'">
+                    POSITION like #{query}
+                </when>
+                <when test="searchType == 'email'">
+                    EMAIL like #{query}
+                </when>
+                <when test="searchType == 'modifiedAt'">
+                    date_format(modifiedAt, "%Y-%m-%d") like #{query}
+                </when>
+            </choose>
+        </if>
+        order by id desc
+        limit #{limit} offset #{offset}
+    </select>
+
+    <select id="getTotalSearchCount" resultType="int">
+        select count(*)
+        from employee
+        where
+        <if test="searchType == 'all'">
+            (DEPT_NO like #{query}
+            or Employee_name like #{query}
+            or POSITION like #{query}
+            or EMAIL like #{query}
+            or date_format(modifiedAt, "%Y-%m-%d") like #{query})
+        </if>
+        <if test="searchType != 'all'">
+            <choose>
+                <when test="searchType == 'deptNo'">
+                    DEPT_NO like #{query}
+                </when>
+                <when test="searchType == 'employeeName'">
+                    Employee_name like #{query}
+                </when>
+                <when test="searchType == 'position'">
+                    POSITION like #{query}
+                </when>
+                <when test="searchType == 'email'">
+                    EMAIL like #{query}
+                </when>
+                <when test="searchType == 'modifiedAt'">
+                    date_format(modifiedAt, "%Y-%m-%d") like #{query}
+                </when>
+            </choose>
+        </if>
+    </select>
+
+
+
+
+    <!-- 3. 전체 직원 수 조회 -->
+    <select id="getTotalBoardCount" resultType="int">
+        select count(*) from employee
+    </select>
+
+
+    <!-- 4. 직원 상세 조회-->
+    <select id="findById" resultMap="EmployeeDtoMap">
+        select id,
+               DEPT_NO,
+               Employee_name,
+               POSITION,
+               EMAIL,
+               Phone_NM,
+               createdAt,
+               modifiedAt
+        from employee where id=#{id}
+    </select>
+
+
+    <!-- 5. 직원 수정-->
+    <update id="update">
+        update employee set DEPT_NO=#{deptNo},
+                            Employee_name=#{employeeName},
+                            POSITION=#{position},
+                            EMAIL=#{email},
+                            Phone_NM=#{phoneNm},
+                            modifiedAt = NOW()
+        where id=#{id}
+    </update>
+
+    <!-- 6. 직원 삭제 -->
+    <delete id="delete">
+        delete from employee where id=#{id}
+    </delete>
+
+
+    <!-- 7. 직원 번호로 직원 조회 -->
+    <select id="findByDeptNo" resultMap="EmployeeDtoMap">
+        select * from employee where DEPT_NO = #{deptNo}
+    </select>
+
+
+</mapper>
+
+
+
