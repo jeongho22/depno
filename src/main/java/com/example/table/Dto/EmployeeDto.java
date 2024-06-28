@@ -2,8 +2,10 @@ package com.example.table.Dto;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 @Getter
@@ -18,4 +20,6 @@ public class EmployeeDto {
     private String phoneNm;  // 기존 Phone_NM에서 변경
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
+    private int fileAttached; // 첨부파일 여부
+    private List<MultipartFile> employFile;
 }

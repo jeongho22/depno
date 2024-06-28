@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
@@ -16,58 +17,56 @@ public class EmployeeController {
     private final EmployeeService employeeService;
 
 
-    // 1. 조회
-//    @GetMapping("/list")
-//    public String findAll(@RequestParam(defaultValue = "1") int page, Model model) {
-//        List<EmployeeDto> EmployeeList = employeeService.findAllPaged(page, 10);
-//        int totalBoardCount = employeeService.getTotalBoardCount();
-//        int totalPages = (int) Math.ceil((double) totalBoardCount / 10);
-//
-//        model.addAttribute("EmployeeList", EmployeeList);
-//        model.addAttribute("currentPage", page);
-//        model.addAttribute("totalPages", totalPages);
-//
-//        System.out.println(EmployeeList.toString()); // List 내용 출력
-//
-//        return "main";
-//    }
-
-    //1-1. 검색어 조회
-
-    // 1. 조회 및 검색
+    //1. 직원 리스트 조회 (/list?page=2&size=20)
     @GetMapping("/list")
     public String findAllOrSearch(
-            @RequestParam(defaultValue = "1") int page,
             @RequestParam(required = false) String searchType,
             @RequestParam(required = false) String query,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "desc") String sortOrder,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
             Model model) {
 
-        int size = 10;  // 페이지 당 항목 수
         List<EmployeeDto> employeeList;
         int totalBoardCount;
 
         if (searchType != null && query != null && !query.isEmpty()) {
             // 검색 조건이 있는 경우
-            employeeList = employeeService.searchEmployees(searchType, query, page, size);
+            employeeList = employeeService.searchPaged(searchType, query, page, size, sortOrder, sortBy);
             totalBoardCount = employeeService.getTotalSearchCount(searchType, query);
-            model.addAttribute("searchType", searchType);
-            model.addAttribute("query", query);
         } else {
             // 검색 조건이 없는 경우
-            employeeList = employeeService.findAllPaged(page, size);
+            employeeList = employeeService.findAllPaged(page, size, sortOrder, sortBy);
             totalBoardCount = employeeService.getTotalBoardCount();
         }
 
         int totalPages = (int) Math.ceil((double) totalBoardCount / size);
+
+
+        model.addAttribute("searchType", searchType);
+        model.addAttribute("query", query);
+        model.addAttribute("size", size);
+        model.addAttribute("sortOrder", sortOrder);
+        model.addAttribute("sortBy", sortBy);
         model.addAttribute("EmployeeList", employeeList);
+        model.addAttribute("totalBoardCount", totalBoardCount);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", totalPages);
+
+
+        System.out.println("검색 및 정렬 기준: " + sortBy + ", 정렬 순서: " + sortOrder);
+        System.out.println("검색 유형:" + searchType);
+        System.out.println("검색어:" + query);
+        System.out.println("최대 몇개씩? 보여 줄까?:" + size);
+        System.out.println("현재 페이지 데이터 리스트:" + employeeList);
+        System.out.println("총 데이터 개수:" + totalBoardCount);
+        System.out.println("전체 페이지 개수 :" + totalPages);
 
         return "main";
     }
 
-
-    //2. 생성
+    //2. 직원 등록
     @PostMapping("/save")
     public String save(@ModelAttribute EmployeeDto employeeDto) throws IOException {
         employeeService.save(employeeDto);
@@ -96,7 +95,7 @@ public class EmployeeController {
         return "redirect:/list";
     }
 
-    //6. 직원 중복 확인
+    //6. 직원 번호 중복 확인
     @GetMapping("/check-duplicate")
     @ResponseBody
     public boolean checkDuplicate(@RequestParam String deptNo) {

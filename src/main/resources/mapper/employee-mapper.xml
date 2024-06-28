@@ -15,6 +15,7 @@
     <!-- ResultMap 정의 -->
     <!-- column에는 실제 테이블 컬럼명-->
     <!-- property에는 Dto변수-->
+
     <resultMap id="EmployeeDtoMap" type="com.example.table.Dto.EmployeeDto">
         <result column="id" property="id"/>
         <result column="DEPT_NO" property="deptNo"/>
@@ -26,31 +27,49 @@
         <result column="modifiedAt" property="modifiedAt"/>
     </resultMap>
 
-    <!-- 1. 직원 등록-->
-    <insert id="save">
-        insert into employee(DEPT_NO, Employee_name, POSITION, EMAIL, Phone_NM, createdAt)
-        values(#{deptNo}, #{employeeName}, #{position}, #{email}, #{phoneNm}, NOW())
-    </insert>
 
-    <!-- 2. 직원 리스트 조회 (페이징) -->
+    <!-- 1-1. 리스트 조회 (페이징) -->
     <select id="findAllPaged" resultMap="EmployeeDtoMap">
         select id,
-               DEPT_NO,
-               Employee_name,
-               POSITION,
-               EMAIL,
-               Phone_NM,
-               createdAt,
-               modifiedAt
+        DEPT_NO,
+        Employee_name,
+        POSITION,
+        EMAIL,
+        Phone_NM,
+        createdAt,
+        modifiedAt
         from employee
-        order by id desc
-            limit #{limit} offset #{offset}
+        order by
+        <choose>
+            <when test="sortBy == 'deptNo'">
+                DEPT_NO ${sortOrder}
+            </when>
+            <when test="sortBy == 'createdAt'">
+                createdAt ${sortOrder}
+            </when>
+            <when test="sortBy == 'modifiedAt'">
+                modifiedAt ${sortOrder}
+            </when>
+        </choose>,
+        id desc
+        limit #{size} offset #{offset}
     </select>
 
-    <!--  2-1.  검색어 조회-->
+<!--    페이징 처리를 위해 offset와 limit 값을 계산하는 방식은 다음과 같습니다.-->
+<!--    limit는 한 페이지에 표시할 데이터의 수 (size)를 나타냅니다.-->
+<!--    offset는 (현재 페이지 - 1) * 페이지당 데이터 수 ((page - 1) * size)로 계산됩니다.-->
+<!--    예를 들어, 페이지 크기가 10이고, 3번째 페이지를 가져오려면 offset는 20 ((3 - 1) * 10)이 되고, limit는 10이 됩니다.-->
+<!--    limit 10 offset 20-->
+<!--    이 쿼리는 21번째 행부터 30번째 행까지의 데이터를 반환합니다.-->
 
 
-    <!-- 2-1. 검색어 조회-->
+    <!-- 1-1. 전체 직원 수 조회 -->
+    <select id="getTotalBoardCount" resultType="int">
+        select count(*) from employee
+    </select>
+
+
+    <!-- 1-2. 검색어 리스트 조회 (페이징) -->
     <select id="searchEmployees" resultMap="EmployeeDtoMap">
         select id,
         DEPT_NO,
@@ -88,14 +107,28 @@
                 </when>
             </choose>
         </if>
-        order by id desc
-        limit #{limit} offset #{offset}
+        order by
+        <choose>
+            <when test="sortBy == 'deptNo'">
+                DEPT_NO ${sortOrder}
+            </when>
+            <when test="sortBy == 'createdAt'">
+                createdAt ${sortOrder}
+            </when>
+            <when test="sortBy == 'modifiedAt'">
+                modifiedAt ${sortOrder}
+            </when>
+        </choose>,
+        id desc
+        limit #{size} offset #{offset}
     </select>
 
+    <!-- 1-2. 검색 직원 수 조회 -->
     <select id="getTotalSearchCount" resultType="int">
         select count(*)
         from employee
         where
+
         <if test="searchType == 'all'">
             (DEPT_NO like #{query}
             or Employee_name like #{query}
@@ -103,6 +136,7 @@
             or EMAIL like #{query}
             or date_format(modifiedAt, "%Y-%m-%d") like #{query})
         </if>
+
         <if test="searchType != 'all'">
             <choose>
                 <when test="searchType == 'deptNo'">
@@ -122,18 +156,19 @@
                 </when>
             </choose>
         </if>
+
     </select>
 
 
 
+    <!-- 2. 직원 등록-->
+    <insert id="save">
+        INSERT INTO employee(DEPT_NO, Employee_name, POSITION, EMAIL, Phone_NM, createdAt)
+        VALUES (#{deptNo}, #{employeeName}, #{position}, #{email}, #{phoneNm}, NOW())
+    </insert>
 
-    <!-- 3. 전체 직원 수 조회 -->
-    <select id="getTotalBoardCount" resultType="int">
-        select count(*) from employee
-    </select>
 
-
-    <!-- 4. 직원 상세 조회-->
+    <!-- 3. 직원 상세 조회-->
     <select id="findById" resultMap="EmployeeDtoMap">
         select id,
                DEPT_NO,
@@ -147,7 +182,7 @@
     </select>
 
 
-    <!-- 5. 직원 수정-->
+    <!-- 4. 직원 수정-->
     <update id="update">
         update employee set DEPT_NO=#{deptNo},
                             Employee_name=#{employeeName},
@@ -158,16 +193,24 @@
         where id=#{id}
     </update>
 
-    <!-- 6. 직원 삭제 -->
+    <!-- 5. 직원 삭제 -->
     <delete id="delete">
         delete from employee where id=#{id}
     </delete>
 
 
-    <!-- 7. 직원 번호로 직원 조회 -->
+    <!-- 6. 직원 번호 중복 확인-->
     <select id="findByDeptNo" resultMap="EmployeeDtoMap">
         select * from employee where DEPT_NO = #{deptNo}
     </select>
+
+
+
+    <!-- 7.첨부파일 저장 -->
+    <insert id="saveFile">
+        insert into file(ORIGINAL_NAME, SAVE_NAME, EMPLOY_ID)
+        values (#{originalName}, #{saveName}, #{employId})
+    </insert>
 
 
 </mapper>

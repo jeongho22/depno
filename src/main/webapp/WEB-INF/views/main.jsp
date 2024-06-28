@@ -1,5 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+
 
 <!DOCTYPE html>
 <html lang="ko">
@@ -22,8 +24,39 @@
         <button type="button" class="btn btn-danger mr-2" onclick="deleteEmployee()">삭제</button>
         <button type="button" class="btn btn-info mr-2" onclick="window.location.href='${pageContext.request.contextPath}/list'">목록</button>
 
+
+
+        <div>
+            <select id="itemsPerPage" onchange="changeItemsPerPage()" class="form-control">
+                <option value="5" ${size == 5 ? 'selected' : ''}>5개씩</option>
+                <option value="10" ${size == 10 ? 'selected' : ''}>10개씩</option>
+                <option value="15" ${size == 15 ? 'selected' : ''}>15개씩</option>
+                <option value="20" ${size == 20 ? 'selected' : ''}>20개씩</option>
+                <option value="50" ${size == 50 ? 'selected' : ''}>50개씩</option>
+            </select>
+        </div>
+
+
+        <!-- Sort by field -->
+        <div class="form-group mr-2">
+            <select id="sortBy" name="sortBy" class="form-control" onchange="sortData()">
+                <option value="deptNo" ${sortBy == 'deptNo' ? 'selected' : ''}>직원번호</option>
+                <option value="createdAt" ${sortBy == 'createdAt' ? 'selected' : ''}>생성일</option>
+                <option value="modifiedAt" ${sortBy == 'modifiedAt' ? 'selected' : ''}>수정일</option>
+            </select>
+        </div>
+
+        <!-- Sort order -->
+        <div class="form-group mr-2">
+            <select id="sortOrder" name="sortOrder" class="form-control" onchange="sortData()">
+                <option value="asc" ${sortOrder == 'asc' ? 'selected' : ''}>오름차순</option>
+                <option value="desc" ${sortOrder == 'desc' ? 'selected' : ''}>내림차순</option>
+            </select>
+        </div>
+
+
         <!-- 검색 폼 -->
-        <form method="get" action="${pageContext.request.contextPath}/list" class="form-inline ml-auto">
+        <form id="searchForm" method="get" action="${pageContext.request.contextPath}/list" class="form-inline ml-auto">
             <div class="form-group mr-2">
                 <select id="searchType" name="searchType" class="form-control">
                     <option value="all" ${searchType == 'all' ? 'selected' : ''}>전체</option>
@@ -37,8 +70,12 @@
             <div class="form-group mr-2">
                 <input type="text" id="query" name="query" class="form-control" placeholder="검색어를 입력하세요" value="${query}">
             </div>
+            <input type="hidden" id="sortOrderHidden" name="sortOrder" value="${sortOrder}">
+            <input type="hidden" id="sortByHidden" name="sortBy" value="${sortBy}">
+            <input type="hidden" id="itemsPerPageHidden" name="size" value="${size}">
             <button type="submit" class="btn btn-primary">검색</button>
         </form>
+
     </div>
 
 
@@ -53,7 +90,9 @@
             <th>직급</th>
             <th>전화번호</th>
             <th>이메일</th>
+            <th>등록일</th>
             <th>수정일</th>
+
         </tr>
         </thead>
         <tbody>
@@ -65,6 +104,7 @@
                 <td>${employee.position}</td>
                 <td>${employee.phoneNm}</td>
                 <td>${employee.email}</td>
+                <td>${employee.createdAt}</td>
                 <td>${employee.modifiedAt}</td>
             </tr>
         </c:forEach>
@@ -72,15 +112,28 @@
     </table>
 
 
+    <!-- 페이지 정보 -->
+    <div class="d-flex justify-content-between mt-3">
+        <div>
+            <p>${currentPage} / ${totalPages} 페이지</p>
+        </div>
+        <div>
+            <p>총 ${totalBoardCount}건</p>
+        </div>
+    </div>
+
+
+    <!-- 페이징 -->
     <div class="d-flex justify-content-center">
         <ul class="pagination">
             <c:forEach var="pageNum" begin="1" end="${totalPages}">
-                <li class="page-item">
-                    <a class="page-link" href="${pageContext.request.contextPath}/list?searchType=${searchType}&query=${query}&page=${pageNum}">${pageNum}</a>
+                <li class="page-item ${currentPage == pageNum ? 'active' : ''}">
+                    <a class="page-link" href="${pageContext.request.contextPath}/list?page=${pageNum}&searchType=${searchType}&query=${query}&size=${size}&sortOrder=${sortOrder}&sortBy=${sortBy}">${pageNum}</a>
                 </li>
             </c:forEach>
         </ul>
     </div>
+
 
     <!-- Create Modal -->
     <div class="modal" id="registerModal">
@@ -92,7 +145,7 @@
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
                 </div>
 
-                <!-- Modal body -->
+                <!-- Create body -->
                 <div class="modal-body">
                     <form id="registerForm">
 
@@ -174,10 +227,13 @@
     <div class="modal" id="updateModal">
         <div class="modal-dialog">
             <div class="modal-content">
+
                 <div class="modal-header">
                     <h4 class="modal-title">직원 수정</h4>
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
                 </div>
+
+
                 <div class="modal-body">
                     <form id="updateForm">
                         <input type="hidden" id="updateId" name="id">
@@ -227,8 +283,66 @@
 
 <script>
 
+    function sortData() {
+        var sortOrder = $('#sortOrder').val();
+        var sortBy = $('#sortBy').val();
+        $('#sortOrderHidden').val(sortOrder);
+        $('#sortByHidden').val(sortBy);
+        $('#searchForm').submit();
+    }
+
+    function changeItemsPerPage() {
+        var size = $('#itemsPerPage').val();
+        var searchType = $('#searchType').val();
+        var query = $('#query').val();
+        var sortOrder = $('#sortOrderHidden').val();
+        var sortBy = $('#sortByHidden').val();
+        window.location.href = "${pageContext.request.contextPath}/list?page=1&searchType=" + searchType + "&query=" + query + "&size=" + size + "&sortOrder=" + sortOrder + "&sortBy=" + sortBy;
+    }
+
+
+
+
     // 1. 직원 등록
     function submitForm() {
+
+        var employeeName = $("#employeeName").val();
+        var deptNo = $("#deptNo").val();
+        var position = $("#position").val();
+        var phoneNm = $("#phoneNm").val();
+        var email = $("#email").val();
+
+        var namePattern = /^[가-힣a-zA-Z]{1,10}$/;
+        var deptNoPattern = /^\d{3}$/;
+        var phonePattern = /^010-\d{4}-\d{4}$/;
+        var emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+        if (!namePattern.test(employeeName)) {
+            alert("유효한 이름을 입력하세요. (한글 또는 영문, 1자 이상 10자 이하)");
+            return;
+        }
+        if (!deptNo || deptNo.trim().length === 0) {
+            alert("직원 번호는 공백 일 수 없습니다.");
+            return;
+        }
+        if (!deptNoPattern.test(deptNo)) {
+            alert("직원 번호는 3자리 숫자여야 합니다.");
+            return;
+        }
+        if (!position || position.trim().length === 0) {
+            alert("직급은 공백 일 수 없습니다.");
+            return;
+        }
+        if (!phonePattern.test(phoneNm)) {
+            alert("유효한 핸드폰 번호를 입력하세요. (예: 010-1234-5678)");
+            return;
+        }
+        if (!emailPattern.test(email)) {
+            alert("유효한 이메일을 입력하세요. (예: example@domain.com)");
+            return;
+        }
+
+
         var formData = $("#registerForm").serialize();
         $.ajax({
             type: "POST",
@@ -239,7 +353,7 @@
                 location.reload();
             },
             error: function(error) {
-                alert("오류가 발생했습니다. 다시 시도해주세요.");
+                alert("이미 존재하는 직원번호 입니다.");
             }
         });
     }
@@ -280,6 +394,7 @@
             type: "GET",
             url: "${pageContext.request.contextPath}/detail/" + id,
             success: function(response) {
+                console.log("수정" + response);
                 $('#updateId').val(response.id);
                 $('#updateDeptNo').val(response.deptNo);
                 $('#updateEmployeeName').val(response.employeeName);
@@ -296,6 +411,43 @@
 
     // 3-2. 직원 수정
     function updateFormSubmit() {
+
+        var employeeName = $("#updateEmployeeName").val();
+        var deptNo = $("#updateDeptNo").val();
+        var position = $("#updatePosition").val();
+        var phoneNm = $("#updatePhoneNm").val();
+        var email = $("#updateEmail").val();
+
+        var namePattern = /^[가-힣a-zA-Z]{1,10}$/;
+        var deptNoPattern = /^\d{3}$/;
+        var phonePattern = /^010-\d{4}-\d{4}$/;
+        var emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+        if (!namePattern.test(employeeName)) {
+            alert("유효한 이름을 입력하세요. (한글 또는 영문, 1자 이상 10자 이하)");
+            return;
+        }
+        if (!deptNo || deptNo.trim().length === 0) {
+            alert("직원 번호는 공백 일 수 없습니다.");
+            return;
+        }
+        if (!deptNoPattern.test(deptNo)) {
+            alert("직원 번호는 3자리 숫자여야 합니다.");
+            return;
+        }
+        if (!position || position.trim().length === 0) {
+            alert("직급은 공백 일 수 없습니다.");
+            return;
+        }
+        if (!phonePattern.test(phoneNm)) {
+            alert("유효한 핸드폰 번호를 입력하세요. (예: 010-1234-5678)");
+            return;
+        }
+        if (!emailPattern.test(email)) {
+            alert("유효한 이메일을 입력하세요. (예: example@domain.com)");
+            return;
+        }
+
         var formData = $("#updateForm").serialize();
         $.ajax({
             type: "POST",
@@ -306,7 +458,7 @@
                 location.reload();
             },
             error: function(error) {
-                alert("오류가 발생했습니다. 다시 시도해주세요.");
+                alert("이미 존재하는 직원번호 입니다.");
             }
         });
     }
@@ -347,18 +499,27 @@
     // 5. 직원 번호 중복 확인
     function checkDuplicate(formId) {
         var form = $('#' + formId);
+
         var deptNo = form.find('[name="deptNo"]').val();
+        var deptNoPattern = /^\d{3}$/;
+
         if (deptNo.trim() === "") {
             alert("직원 번호를 입력하세요.");
             return;
         }
+
+        if (!deptNoPattern.test(deptNo)) {
+            alert("직원 번호는 3자리 숫자여야 합니다.");
+            return;
+        }
+
         $.ajax({
             type: "GET",
             url: "${pageContext.request.contextPath}/check-duplicate",
             data: { deptNo: deptNo },
             success: function(response) {
                 if (response) {
-                    alert("직원 번호가 중복됩니다.");
+                    alert("이미 존재하는 직원번호 입니다.");
                 } else {
                     alert("사용 가능한 직원 번호입니다.");
                 }
@@ -368,9 +529,9 @@
             }
         });
     }
-
-
 </script>
 
 </body>
 </html>
+
+
