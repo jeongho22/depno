@@ -135,6 +135,7 @@
     </div>
 
 
+
     <!-- Create Modal -->
     <div class="modal" id="registerModal">
         <div class="modal-dialog">
@@ -147,8 +148,7 @@
 
                 <!-- Create body -->
                 <div class="modal-body">
-                    <form id="registerForm">
-
+                    <form id="registerForm" enctype="multipart/form-data" method="post" action="/save">
                         <div class="form-group">
                             <label for="deptNo">직원번호:</label>
                             <div class="input-group">
@@ -175,12 +175,17 @@
                             <label for="email">이메일:</label>
                             <input type="text" class="form-control" id="email" name="email">
                         </div>
-                        <button type="button" class="btn btn-primary" onclick="submitForm()">등록</button>
+                        <div class="form-group">
+                            <label for="employFile">파일 추가:</label>
+                            <input type="file" class="form-control" id="employFile" name="employFile" multiple>
+                        </div>
+                        <button type="submit" class="btn btn-primary">등록</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+
 
     <!-- Detail Modal -->
     <div class="modal" id="detailModal">
@@ -216,14 +221,17 @@
                             <th>수정일</th>
                             <td id="detailModifiedAt"></td>
                         </tr>
+                        <tr>
+                            <th>첨부파일</th>
+                            <td id="detailFiles"></td>
+                        </tr>
                     </table>
                 </div>
             </div>
         </div>
     </div>
 
-
-    <!-- Update Modal -->
+        <!-- Update Modal -->
     <div class="modal" id="updateModal">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -267,6 +275,16 @@
                             <label for="updateEmail">이메일:</label>
                             <input type="text" class="form-control" id="updateEmail" name="email">
                         </div>
+
+                        <div class="form-group">
+                            <label for="updateEmployFile">파일 추가:</label>
+                            <input type="file" class="form-control" id="updateEmployFile" name="employFile" multiple>
+                        </div>
+                        <div class="form-group">
+                            <label for="filesToDelete">기존 파일 삭제:</label>
+                            <div id="filesToDelete"></div>
+                        </div>
+
                         <button type="button" class="btn btn-primary" onclick="updateFormSubmit()">수정</button>
                     </form>
                 </div>
@@ -342,12 +360,14 @@
             return;
         }
 
+        var formData = new FormData($("#registerForm")[0]);
 
-        var formData = $("#registerForm").serialize();
         $.ajax({
             type: "POST",
             url: "${pageContext.request.contextPath}/save",
             data: formData,
+            processData: false,
+            contentType: false,
             success: function(response) {
                 alert("직원이 등록되었습니다.");
                 location.reload();
@@ -366,14 +386,25 @@
                 type: "GET",
                 url: "${pageContext.request.contextPath}/detail/" + id,
                 success: function(response) {
+                    console.log("Employee Detail Response:", response); // 디버깅을 위해 응답 데이터를 콘솔에 출력
                     $('#detailDeptNo').text(response.deptNo);
                     $('#detailEmployeeName').text(response.employeeName);
                     $('#detailPosition').text(response.position);
                     $('#detailPhoneNm').text(response.phoneNm);
                     $('#detailEmail').text(response.email);
                     $('#detailModifiedAt').text(response.modifiedAt);
+
+                    // 파일 목록 표시
+                    var filesHtml = "";
+                    if (response.files) {
+                        response.files.forEach(function(file) {
+                            filesHtml += '<a href="${pageContext.request.contextPath}/download?fileName=' + file.saveName + '&originalName=' + file.originalName + '">' + file.originalName + '</a><br>';
+                        });
+                    }
+                    $('#detailFiles').html(filesHtml);
                 },
                 error: function(error) {
+                    console.log("Error:", error); // 디버깅을 위해 오류를 콘솔에 출력
                     alert("오류가 발생했습니다. 상세 정보를 불러올 수 없습니다.");
                 }
             });
@@ -381,7 +412,9 @@
     });
 
 
+
     // 3-1. 직원 수정
+    // 기존 파일을 표시하고 삭제할 수 있도록 수정 모달 열기
     function openUpdateModal() {
         var selectedEmployee = $('.employee-select:checked');
         if (selectedEmployee.length != 1) {
@@ -392,9 +425,8 @@
         var id = selectedEmployee.data('id');
         $.ajax({
             type: "GET",
-            url: "${pageContext.request.contextPath}/detail/" + id,
+            url: "/detail/" + id,
             success: function(response) {
-                console.log("수정" + response);
                 $('#updateId').val(response.id);
                 $('#updateDeptNo').val(response.deptNo);
                 $('#updateEmployeeName').val(response.employeeName);
@@ -402,9 +434,17 @@
                 $('#updatePhoneNm').val(response.phoneNm);
                 $('#updateEmail').val(response.email);
                 $('#updateModal').modal('show');
+
+                var filesHtml = "";
+                if (response.files) {
+                    response.files.forEach(function(file) {
+                        filesHtml += '<input type="checkbox" name="filesToDelete" value="' + file.id + '">' + file.originalName + '<br>';
+                    });
+                }
+                $('#filesToDelete').html(filesHtml);
             },
             error: function(error) {
-                alert("오류가 발생했습니다. 상세 정보를 불러올 수 없습니다.");
+                alert("오류가 발생했습니다. 다시 시도해주세요.");
             }
         });
     }
@@ -448,19 +488,24 @@
             return;
         }
 
-        var formData = $("#updateForm").serialize();
+
+        var formData = new FormData($("#updateForm")[0]);
         $.ajax({
             type: "POST",
             url: "${pageContext.request.contextPath}/update/" + $('#updateId').val(),
             data: formData,
+            processData: false,
+            contentType: false,
             success: function(response) {
                 alert("직원이 수정되었습니다.");
                 location.reload();
             },
             error: function(error) {
-                alert("이미 존재하는 직원번호 입니다.");
+                alert("오류가 발생했습니다. 다시 시도해주세요.");
             }
         });
+
+
     }
 
 

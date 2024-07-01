@@ -16,6 +16,7 @@
     <!-- column에는 실제 테이블 컬럼명-->
     <!-- property에는 Dto변수-->
 
+    <!-- ResultMap 정의 -->
     <resultMap id="EmployeeDtoMap" type="com.example.table.Dto.EmployeeDto">
         <result column="id" property="id"/>
         <result column="DEPT_NO" property="deptNo"/>
@@ -25,6 +26,7 @@
         <result column="Phone_NM" property="phoneNm"/>
         <result column="createdAt" property="createdAt"/>
         <result column="modifiedAt" property="modifiedAt"/>
+        <result column="fileAttached" property="fileAttached"/>
     </resultMap>
 
 
@@ -162,13 +164,18 @@
 
 
     <!-- 2. 직원 등록-->
-    <insert id="save">
-        INSERT INTO employee(DEPT_NO, Employee_name, POSITION, EMAIL, Phone_NM, createdAt)
-        VALUES (#{deptNo}, #{employeeName}, #{position}, #{email}, #{phoneNm}, NOW())
+    <insert id="save" parameterType="com.example.table.Dto.EmployeeDto">
+        <selectKey keyProperty="id" order="AFTER" resultType="long">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO employee (DEPT_NO, Employee_name, POSITION, EMAIL, Phone_NM, createdAt, fileAttached)
+        VALUES (#{deptNo}, #{employeeName}, #{position}, #{email}, #{phoneNm}, NOW(), #{fileAttached})
     </insert>
 
 
-    <!-- 3. 직원 상세 조회-->
+
+
+    <!-- 3. 직원 상세 조회 -->
     <select id="findById" resultMap="EmployeeDtoMap">
         select id,
                DEPT_NO,
@@ -177,7 +184,8 @@
                EMAIL,
                Phone_NM,
                createdAt,
-               modifiedAt
+               modifiedAt,
+               fileAttached
         from employee where id=#{id}
     </select>
 
@@ -205,12 +213,35 @@
     </select>
 
 
-
     <!-- 7.첨부파일 저장 -->
-    <insert id="saveFile">
-        insert into file(ORIGINAL_NAME, SAVE_NAME, EMPLOY_ID)
-        values (#{originalName}, #{saveName}, #{employId})
+    <insert id="saveFile" parameterType="com.example.table.Dto.FileDto">
+        INSERT INTO file (ORIGINAL_NAME, SAVE_NAME, EMPLOY_ID)
+        VALUES (#{originalName}, #{saveName}, #{employId})
     </insert>
+
+
+    <!-- 8.직원의 파일 목록 조회 -->
+    <select id="findFilesByEmployeeId" resultType="com.example.table.Dto.FileDto">
+        SELECT id, employ_Id AS employId, original_Name AS originalName, save_Name AS saveName, create_At AS createAt
+        FROM file
+        WHERE employ_Id = #{employId}
+    </select>
+
+
+    <select id="findFileById" resultType="com.example.table.Dto.FileDto">
+        SELECT id, employ_Id AS employId, original_Name AS originalName, save_Name AS saveName, create_At AS createAt
+        FROM file
+        WHERE id = #{id}
+    </select>
+
+
+    <delete id="deleteFile">
+        DELETE FROM file WHERE id = #{id}
+    </delete>
+
+    <update id="updateFileAttached">
+        update employee set fileAttached=#{fileAttached} where id=#{id}
+    </update>
 
 
 </mapper>

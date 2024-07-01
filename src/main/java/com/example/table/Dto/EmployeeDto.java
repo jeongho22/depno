@@ -21,5 +21,7 @@ public class EmployeeDto {
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
     private int fileAttached; // 첨부파일 여부
-    private List<MultipartFile> employFile;
+    private List<MultipartFile> employFile; // 파일 업로드를 위한 필드
+    private List<FileDto> files; // 업로드된 파일 목록
+    private List<Long> filesToDelete; // 삭제할 파일 ID 목록
 }

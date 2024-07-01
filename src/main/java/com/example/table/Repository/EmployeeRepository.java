@@ -59,7 +59,6 @@ public class EmployeeRepository {
         sql.insert("employee.save", employeeDto);
         return employeeDto;
     }
-
     //3. 직원 상세 정보
     public EmployeeDto findById(Long id) {
         return sql.selectOne("employee.findById", id);
@@ -82,9 +81,35 @@ public class EmployeeRepository {
     }
 
 
+
     // 7. 첨부파일 저장
     public void saveFile(FileDto fileDto) {
         sql.insert("employee.saveFile", fileDto);
+    }
+
+    // 8. 직원의 파일 목록 조회
+    public List<FileDto> findFilesByEmployeeId(Long employId) {
+        return sql.selectList("employee.findFilesByEmployeeId", employId);
+    }
+
+    // 9. 파일 아이디 조회
+    public FileDto findFileById(Long fileId) {
+        return sql.selectOne("employee.findFileById", fileId);
+    }
+
+
+    // 10 . 파일 업데이트
+    public void updateFileAttached(Long id, int fileAttached) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("id", id);
+        params.put("fileAttached", fileAttached);
+        sql.update("employee.updateFileAttached", params);
+    }
+
+
+    // 11. 파일 삭제
+    public void deleteFile(Long fileId) {
+        sql.delete("employee.deleteFile", fileId);
     }
 
 

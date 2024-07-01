@@ -10,8 +10,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 @Service
@@ -50,6 +50,7 @@ public class EmployeeService {
 
     //2. 직원 등록
     public void save(EmployeeDto employeeDto) throws IOException {
+
         // 중복 확인 로직 추가
         if (employeeRepository.findByDeptNo(employeeDto.getDeptNo()) != null) {
             throw new IllegalArgumentException("이미 존재하는 직원 번호입니다.");
@@ -74,52 +75,37 @@ public class EmployeeService {
         }
 
         employeeDto.setCreatedAt(LocalDateTime.now());
+        employeeRepository.save(employeeDto);
+        handleFileUpload(employeeDto);
 
-        if (employeeDto.getEmployFile().get(0).isEmpty()) {
-            // 파일 없다.
-            employeeDto.setFileAttached(0);
-            employeeRepository.save(employeeDto);
-        } else {
-            // 파일 있다.
-            employeeDto.setFileAttached(1);
-            // 게시글 저장 후 id값 활용을 위해 리턴 받음.
-            EmployeeDto savedEmploy = employeeRepository.save(employeeDto);
-            // 파일만 따로 가져오기
-            for (MultipartFile employFile: employeeDto.getEmployFile()) {
-                // 파일 이름 가져오기
-                String originalFilename = employFile.getOriginalFilename();
-                System.out.println("originalFilename = " + originalFilename);
-                // 저장용 이름 만들기
-                System.out.println(System.currentTimeMillis());
-                String storedFileName = System.currentTimeMillis() + "-" + originalFilename;
-                System.out.println("storedFileName = " + storedFileName);
-
-                // BoardFileDTO 세팅
-                FileDto fileDto = new FileDto();
-                fileDto.setOriginalName(originalFilename);
-                fileDto.setSaveName(storedFileName);
-                fileDto.setEmployId(savedEmploy.getId());
-
-                // 파일 저장용 폴더에 파일 저장 처리
-                String savePath = "C:/Users/USER/Desktop/uploading/" + storedFileName;
-
-                employFile.transferTo(new File(savePath));
-                // board_file_table 저장 처리
-                employeeRepository.saveFile(fileDto);
-            }
+        // fileAttached 값 업데이트
+        if (employeeDto.getFileAttached() == 1) {
+            employeeRepository.updateFileAttached(employeeDto.getId(), employeeDto.getFileAttached());
         }
+
     }
+
 
     //3. 직원 상세 정보
     public EmployeeDto findById(Long id) {
-        return employeeRepository.findById(id);
+        EmployeeDto employee = employeeRepository.findById(id);
+        if (employee != null) {
+            List<FileDto> files = employeeRepository.findFilesByEmployeeId(id);
+            if (files != null && !files.isEmpty()) {
+                employee.setFiles(files);
+                employee.setFileAttached(1);  // 파일이 있는 경우 fileAttached 필드를 1로 설정
+            } else {
+                employee.setFileAttached(0);  // 파일이 없는 경우 fileAttached 필드를 0으로 설정
+            }
+        }
+        return employee;
     }
 
 
-    //4. 직원 수정
-    public void update(EmployeeDto employeeDto) {
 
-        // 중복 확인 로직 추가
+    //4. 직원 수정
+    public void update(EmployeeDto employeeDto) throws IOException {
+
         EmployeeDto existingEmployee = employeeRepository.findByDeptNo(employeeDto.getDeptNo());
         if (existingEmployee != null && !existingEmployee.getId().equals(employeeDto.getId())) {
             throw new IllegalArgumentException("이미 존재하는 직원 번호입니다.");
@@ -128,7 +114,7 @@ public class EmployeeService {
             throw new IllegalArgumentException("유효한 이름을 입력하세요. (한글 또는 영문, 1자 이상 10자 이하)");
         }
         if (employeeDto.getDeptNo() == null || employeeDto.getDeptNo().trim().isEmpty()) {
-            throw new IllegalArgumentException("직원 번호는 공백 일수 없습니다.");
+            throw new IllegalArgumentException("직원 번호는 공백 일 수 없습니다.");
         }
         if (!DEPT_NO_PATTERN.matcher(employeeDto.getDeptNo()).matches()) {
             throw new IllegalArgumentException("직원 번호는 3자리 숫자여야 합니다.");
@@ -144,20 +130,98 @@ public class EmployeeService {
         }
 
         employeeDto.setModifiedAt(LocalDateTime.now());
+
+
+        // 처리 전에 기존 파일을 모두 삭제하고 업데이트 로직을 수행
+        if (employeeDto.getFilesToDelete() != null) {
+            for (Long fileId : employeeDto.getFilesToDelete()) {
+                FileDto fileDto = employeeRepository.findFileById(fileId);
+                if (fileDto != null) {
+                    File file = new File("C:/Users/USER/Desktop/uploading/" + fileDto.getSaveName());
+                    if (file.exists()) {
+                        file.delete();
+                    }
+                    employeeRepository.deleteFile(fileId);
+                }
+            }
+        }
+
+        handleFileUpload(employeeDto);
+
+
+        // 파일 삭제 후 남아 있는 파일 확인하여 fileAttached 업데이트
+        List<FileDto> remainingFiles = employeeRepository.findFilesByEmployeeId(employeeDto.getId());
+        if (remainingFiles == null || remainingFiles.isEmpty()) {
+            employeeDto.setFileAttached(0);
+            employeeRepository.updateFileAttached(employeeDto.getId(), 0);
+        } else {
+            employeeRepository.updateFileAttached(employeeDto.getId(), 1);
+        }
         employeeRepository.update(employeeDto);
     }
 
     //5. 직원 삭제
-    public void delete(List<Long> ids) {
+    public void delete(List<Long> ids) throws IOException {
         for (Long id : ids) {
+            EmployeeDto employee = employeeRepository.findById(id);
+            if (employee != null && employee.getFileAttached() == 1) {
+                List<FileDto> files = employeeRepository.findFilesByEmployeeId(id);
+                for (FileDto file : files) {
+                    File fileToDelete = new File("C:/Users/USER/Desktop/uploading/" + file.getSaveName());
+                    if (fileToDelete.exists()) {
+                        fileToDelete.delete();
+                    }
+                    employeeRepository.deleteFile(file.getId());
+                }
+            }
             employeeRepository.delete(id);
         }
     }
+
+
 
     //6. 직원 번호 중복 확인
     public EmployeeDto findByDeptNo(String deptNo) {
         return employeeRepository.findByDeptNo(deptNo);
     }
 
+
+    //7. 파일 업로드 핸들러
+    private void handleFileUpload(EmployeeDto employeeDto) throws IOException {
+        boolean hasFiles = false;
+        if (employeeDto.getEmployFile() != null && !employeeDto.getEmployFile().isEmpty()) {
+            for (MultipartFile employFile : employeeDto.getEmployFile()) {
+                if (!employFile.isEmpty()) {  // 파일이 비어있지 않은 경우에만 처리
+                    hasFiles = true;
+                    String originalFilename = employFile.getOriginalFilename();
+                    String saveFileName = UUID.randomUUID().toString() + getExtension(originalFilename);
+
+                    FileDto fileDto = new FileDto();
+                    fileDto.setOriginalName(originalFilename);
+                    fileDto.setSaveName(saveFileName);
+                    fileDto.setEmployId(employeeDto.getId());
+
+                    String savePath = "C:/Users/USER/Desktop/uploading/" + saveFileName;
+
+                    File destFile = new File(savePath);
+                    employFile.transferTo(destFile);
+
+                    employeeRepository.saveFile(fileDto);
+                }
+            }
+        }
+
+        // Update fileAttached field based on whether files are uploaded
+        if (!hasFiles) {
+            employeeDto.setFileAttached(0);
+        } else {
+            employeeDto.setFileAttached(1);
+        }
+    }
+
+    private String getExtension(String filename) {
+        int dotIndex = filename.lastIndexOf('.');
+        return (dotIndex == -1) ? "" : filename.substring(dotIndex);
+    }
 
 }

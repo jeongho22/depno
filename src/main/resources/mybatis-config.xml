@@ -4,5 +4,6 @@
 <configuration>
     <typeAliases>
         <typeAlias type="com.example.table.Dto.EmployeeDto" alias="employee"></typeAlias>
+        <typeAlias type="com.example.table.Dto.FileDto" alias="file"></typeAlias>
     </typeAliases>
 </configuration>
