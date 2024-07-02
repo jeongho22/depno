@@ -214,34 +214,37 @@
 
 
     <!-- 7.첨부파일 저장 -->
-    <insert id="saveFile" parameterType="com.example.table.Dto.FileDto">
+    <insert id="saveFile" parameterType="file">
         INSERT INTO file (ORIGINAL_NAME, SAVE_NAME, EMPLOY_ID)
         VALUES (#{originalName}, #{saveName}, #{employId})
     </insert>
 
 
     <!-- 8.직원의 파일 목록 조회 -->
-    <select id="findFilesByEmployeeId" resultType="com.example.table.Dto.FileDto">
+    <select id="findFilesByEmployeeId" resultType="file">
         SELECT id, employ_Id AS employId, original_Name AS originalName, save_Name AS saveName, create_At AS createAt
         FROM file
         WHERE employ_Id = #{employId}
     </select>
 
 
-    <select id="findFileById" resultType="com.example.table.Dto.FileDto">
+    <!-- 9. 파일 아이디 조회 -->
+    <select id="findFileById" resultType="file">
         SELECT id, employ_Id AS employId, original_Name AS originalName, save_Name AS saveName, create_At AS createAt
         FROM file
         WHERE id = #{id}
     </select>
 
 
-    <delete id="deleteFile">
-        DELETE FROM file WHERE id = #{id}
-    </delete>
-
     <update id="updateFileAttached">
         update employee set fileAttached=#{fileAttached} where id=#{id}
     </update>
+
+
+
+    <delete id="deleteFile">
+        DELETE FROM file WHERE id = #{id}
+    </delete>
 
 
 </mapper>

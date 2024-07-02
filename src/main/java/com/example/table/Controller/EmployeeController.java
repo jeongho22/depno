@@ -113,23 +113,25 @@ public class EmployeeController {
         return employeeService.findByDeptNo(deptNo) != null;
     }
 
+
     //7. 파일 다운로드
     @GetMapping("/download")
     public ResponseEntity<Resource> downloadFile(@RequestParam String fileName, @RequestParam String originalName) {
         try {
+            // 1. 업로드 된 파일이 해당 경로
             File file = new File("C:/Users/USER/Desktop/uploading/" + fileName);
+
             if (!file.exists()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             }
-
             Resource resource = new FileSystemResource(file);
-
             String encodedFileName = URLEncoder.encode(originalName, StandardCharsets.UTF_8);
             encodedFileName = encodedFileName.replaceAll("\\+", "%20");
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + encodedFileName)
                     .body(resource);
+
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }

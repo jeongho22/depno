@@ -102,7 +102,6 @@ public class EmployeeService {
     }
 
 
-
     //4. 직원 수정
     public void update(EmployeeDto employeeDto) throws IOException {
 
@@ -136,6 +135,7 @@ public class EmployeeService {
         if (employeeDto.getFilesToDelete() != null) {
             for (Long fileId : employeeDto.getFilesToDelete()) {
                 FileDto fileDto = employeeRepository.findFileById(fileId);
+
                 if (fileDto != null) {
                     File file = new File("C:/Users/USER/Desktop/uploading/" + fileDto.getSaveName());
                     if (file.exists()) {
@@ -145,7 +145,6 @@ public class EmployeeService {
                 }
             }
         }
-
         handleFileUpload(employeeDto);
 
 
@@ -159,6 +158,7 @@ public class EmployeeService {
         }
         employeeRepository.update(employeeDto);
     }
+
 
     //5. 직원 삭제
     public void delete(List<Long> ids) throws IOException {
@@ -186,6 +186,7 @@ public class EmployeeService {
     }
 
 
+
     //7. 파일 업로드 핸들러
     private void handleFileUpload(EmployeeDto employeeDto) throws IOException {
         boolean hasFiles = false;
@@ -210,8 +211,6 @@ public class EmployeeService {
                 }
             }
         }
-
-        // Update fileAttached field based on whether files are uploaded
         if (!hasFiles) {
             employeeDto.setFileAttached(0);
         } else {
@@ -219,6 +218,8 @@ public class EmployeeService {
         }
     }
 
+
+    // 8. 파일 경로의 확장명 (txt ,jpg, docx)
     private String getExtension(String filename) {
         int dotIndex = filename.lastIndexOf('.');
         return (dotIndex == -1) ? "" : filename.substring(dotIndex);

@@ -16,9 +16,6 @@ public class EmployeeRepository {
 
     private final SqlSessionTemplate sql;
 
-    // params.put: MyBatis에서 SQL 쿼리에 사용할 파라미터를 Map 객체에 저장하기 위해 사용됩니다.
-    // 데이터 접근 레이어에서 SQL 쿼리에 파라미터를 전달하는 역할
-
     // 1. 게시글 리스트 조회
     public List<EmployeeDto> findAllPaged(int offset, int size, String sortOrder,String sortBy) {
         Map<String, Object> params = new HashMap<>();
@@ -97,7 +94,6 @@ public class EmployeeRepository {
         return sql.selectOne("employee.findFileById", fileId);
     }
 
-
     // 10 . 파일 업데이트
     public void updateFileAttached(Long id, int fileAttached) {
         Map<String, Object> params = new HashMap<>();
@@ -105,7 +101,6 @@ public class EmployeeRepository {
         params.put("fileAttached", fileAttached);
         sql.update("employee.updateFileAttached", params);
     }
-
 
     // 11. 파일 삭제
     public void deleteFile(Long fileId) {

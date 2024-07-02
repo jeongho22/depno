@@ -136,21 +136,18 @@
 
 
 
-    <!-- Create Modal -->
+    <!-- 등록 모달 -->
     <div class="modal" id="registerModal">
         <div class="modal-dialog">
             <div class="modal-content">
-
                 <div class="modal-header">
                     <h4 class="modal-title">직원 등록</h4>
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
                 </div>
-
-                <!-- Create body -->
                 <div class="modal-body">
                     <form id="registerForm" enctype="multipart/form-data" method="post" action="/save">
                         <div class="form-group">
-                            <label for="deptNo">직원번호:</label>
+                            <label for="deptNo">직원번호</label>
                             <div class="input-group">
                                 <input type="text" class="form-control" id="deptNo" name="deptNo">
                                 <div class="input-group-append">
@@ -158,33 +155,34 @@
                                 </div>
                             </div>
                         </div>
-
                         <div class="form-group">
-                            <label for="employeeName">직원명:</label>
+                            <label for="employeeName">직원명</label>
                             <input type="text" class="form-control" id="employeeName" name="employeeName">
                         </div>
                         <div class="form-group">
-                            <label for="position">직급:</label>
+                            <label for="position">직급</label>
                             <input type="text" class="form-control" id="position" name="position">
                         </div>
                         <div class="form-group">
-                            <label for="phoneNm">전화번호:</label>
+                            <label for="phoneNm">전화번호</label>
                             <input type="text" class="form-control" id="phoneNm" name="phoneNm">
                         </div>
                         <div class="form-group">
-                            <label for="email">이메일:</label>
+                            <label for="email">이메일</label>
                             <input type="text" class="form-control" id="email" name="email">
                         </div>
                         <div class="form-group">
-                            <label for="employFile">파일 추가:</label>
-                            <input type="file" class="form-control" id="employFile" name="employFile" multiple>
+                            <label for="employFile">파일 추가</label>
+                            <input type="file" class="form-control" id="employFile" name="employFile" multiple onchange="handleFileSelect(this)">
                         </div>
-                        <button type="submit" class="btn btn-primary">등록</button>
+                        <div id="fileList" class="form-group"></div>
+                        <button type="button" class="btn btn-primary" onclick="submitForm()">등록</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+
 
 
     <!-- Detail Modal -->
@@ -231,24 +229,19 @@
         </div>
     </div>
 
-        <!-- Update Modal -->
+    <!-- 수정 모달 -->
     <div class="modal" id="updateModal">
         <div class="modal-dialog">
             <div class="modal-content">
-
                 <div class="modal-header">
                     <h4 class="modal-title">직원 수정</h4>
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
                 </div>
-
-
                 <div class="modal-body">
-                    <form id="updateForm">
+                    <form id="updateForm" enctype="multipart/form-data">
                         <input type="hidden" id="updateId" name="id">
-
-
                         <div class="form-group">
-                            <label for="updateDeptNo">직원번호:</label>
+                            <label for="updateDeptNo">직원번호</label>
                             <div class="input-group">
                                 <input type="text" class="form-control" id="updateDeptNo" name="deptNo">
                                 <div class="input-group-append">
@@ -256,41 +249,38 @@
                                 </div>
                             </div>
                         </div>
-
-
-
                         <div class="form-group">
-                            <label for="updateEmployeeName">직원명:</label>
+                            <label for="updateEmployeeName">직원명</label>
                             <input type="text" class="form-control" id="updateEmployeeName" name="employeeName">
                         </div>
                         <div class="form-group">
-                            <label for="updatePosition">직급:</label>
+                            <label for="updatePosition">직급</label>
                             <input type="text" class="form-control" id="updatePosition" name="position">
                         </div>
                         <div class="form-group">
-                            <label for="updatePhoneNm">전화번호:</label>
+                            <label for="updatePhoneNm">전화번호</label>
                             <input type="text" class="form-control" id="updatePhoneNm" name="phoneNm">
                         </div>
                         <div class="form-group">
-                            <label for="updateEmail">이메일:</label>
+                            <label for="updateEmail">이메일</label>
                             <input type="text" class="form-control" id="updateEmail" name="email">
                         </div>
-
                         <div class="form-group">
-                            <label for="updateEmployFile">파일 추가:</label>
-                            <input type="file" class="form-control" id="updateEmployFile" name="employFile" multiple>
+                            <label for="updateEmployFile">파일 추가</label>
+                            <input type="file" class="form-control" id="updateEmployFile" name="employFile" multiple onchange="handleUpdateFileSelect(this)">
                         </div>
+                        <div id="updateFileList" class="form-group"></div>
                         <div class="form-group">
-                            <label for="filesToDelete">기존 파일 삭제:</label>
+                            <label for="filesToDelete">기존 파일 삭제</label>
                             <div id="filesToDelete"></div>
                         </div>
-
                         <button type="button" class="btn btn-primary" onclick="updateFormSubmit()">수정</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+
 
 </div>
 
@@ -301,24 +291,10 @@
 
 <script>
 
-    function sortData() {
-        var sortOrder = $('#sortOrder').val();
-        var sortBy = $('#sortBy').val();
-        $('#sortOrderHidden').val(sortOrder);
-        $('#sortByHidden').val(sortBy);
-        $('#searchForm').submit();
-    }
-
-    function changeItemsPerPage() {
-        var size = $('#itemsPerPage').val();
-        var searchType = $('#searchType').val();
-        var query = $('#query').val();
-        var sortOrder = $('#sortOrderHidden').val();
-        var sortBy = $('#sortByHidden').val();
-        window.location.href = "${pageContext.request.contextPath}/list?page=1&searchType=" + searchType + "&query=" + query + "&size=" + size + "&sortOrder=" + sortOrder + "&sortBy=" + sortBy;
-    }
-
-
+    // 전역 배열을 초기화
+    selectedFiles = [];
+    // 전역 배열을 초기화
+    selectedUpdateFiles = [];
 
 
     // 1. 직원 등록
@@ -361,6 +337,12 @@
         }
 
         var formData = new FormData($("#registerForm")[0]);
+
+        // 전역 배열에 저장된 파일을 폼 데이터에 추가
+        formData.delete('employFile'); // 기존 파일 삭제
+        selectedFiles.forEach(function(file) {
+            formData.append('employFile', file);
+        });
 
         $.ajax({
             type: "POST",
@@ -412,8 +394,7 @@
     });
 
 
-
-    // 3-1. 직원 수정
+    // 3-1. 직원 수정 모달창
     // 기존 파일을 표시하고 삭제할 수 있도록 수정 모달 열기
     function openUpdateModal() {
         var selectedEmployee = $('.employee-select:checked');
@@ -438,7 +419,7 @@
                 var filesHtml = "";
                 if (response.files) {
                     response.files.forEach(function(file) {
-                        filesHtml += '<input type="checkbox" name="filesToDelete" value="' + file.id + '">' + file.originalName + '<br>';
+                        filesHtml += '<div><input type="checkbox" name="filesToDelete" value="' + file.id + '">' + file.originalName + '<br></div>';
                     });
                 }
                 $('#filesToDelete').html(filesHtml);
@@ -449,7 +430,7 @@
         });
     }
 
-    // 3-2. 직원 수정
+    // 3-2. 직원 수정 버튼
     function updateFormSubmit() {
 
         var employeeName = $("#updateEmployeeName").val();
@@ -488,8 +469,14 @@
             return;
         }
 
-
         var formData = new FormData($("#updateForm")[0]);
+
+        // 전역 배열에 저장된 파일을 폼 데이터에 추가
+        formData.delete('employFile'); // 기존 파일 삭제
+        selectedUpdateFiles.forEach(function(file) {
+            formData.append('employFile', file);
+        });
+
         $.ajax({
             type: "POST",
             url: "${pageContext.request.contextPath}/update/" + $('#updateId').val(),
@@ -504,10 +491,7 @@
                 alert("오류가 발생했습니다. 다시 시도해주세요.");
             }
         });
-
-
     }
-
 
     // 4. 직원 삭제
     function deleteEmployee() {
@@ -540,6 +524,7 @@
             }
         });
     }
+
 
     // 5. 직원 번호 중복 확인
     function checkDuplicate(formId) {
@@ -574,8 +559,69 @@
             }
         });
     }
-</script>
 
+
+    // 6. 등록 업로드 파일 List 보관
+    function handleFileSelect(input) {
+        var files = input.files;
+        var fileList = $('#fileList');
+
+        // 선택된 파일을 전역 배열에 추가
+        for (var i = 0; i < files.length; i++) {
+            selectedFiles.push(files[i]);
+        }
+
+        // 파일 목록을 UI에 업데이트
+        fileList.empty();
+        for (var i = 0; i < selectedFiles.length; i++) {
+            fileList.append('<div id="file-' + i + '">' + selectedFiles[i].name + ' <button type="button" class="btn btn-danger btn-sm" onclick="removeFile(' + i + ')">X</button></div>');
+        }
+    }
+
+    // 7. 수정 업로드 파일 List 보관
+    function handleUpdateFileSelect(input) {
+        var files = input.files;
+        var fileList = $('#updateFileList');
+
+        // 선택된 파일을 전역 배열에 추가
+        for (var i = 0; i < files.length; i++) {
+            selectedUpdateFiles.push(files[i]);
+        }
+
+        // 파일 목록을 UI에 업데이트
+        fileList.empty();
+        for (var i = 0; i < selectedUpdateFiles.length; i++) {
+            fileList.append('<div id="update-file-' + i + '">' + selectedUpdateFiles[i].name + ' <button type="button" class="btn btn-danger btn-sm" onclick="removeUpdateFile(' + i + ')">X</button></div>');
+        }
+    }
+
+
+    // 8. 등록 업로드 파일 삭제
+    function removeFile(index) {
+        selectedFiles.splice(index, 1); // 선택된 파일 목록에서 제거
+
+        // 파일 목록을 UI에 업데이트
+        var fileList = $('#fileList');
+        fileList.empty();
+        for (var i = 0; i < selectedFiles.length; i++) {
+            fileList.append('<div id="file-' + i + '">' + selectedFiles[i].name + ' <button type="button" class="btn btn-danger btn-sm" onclick="removeFile(' + i + ')">X</button></div>');
+        }
+    }
+
+
+    // 9. 수정 업로드 파일 삭제
+    function removeUpdateFile(index) {
+        selectedUpdateFiles.splice(index, 1); // 선택된 파일 목록에서 제거
+
+        // 파일 목록을 UI에 업데이트
+        var fileList = $('#updateFileList');
+        fileList.empty();
+        for (var i = 0; i < selectedUpdateFiles.length; i++) {
+            fileList.append('<div id="update-file-' + i + '">' + selectedUpdateFiles[i].name + ' <button type="button" class="btn btn-danger btn-sm" onclick="removeUpdateFile(' + i + ')">X</button></div>');
+        }
+    }
+
+</script>
 </body>
 </html>
 
