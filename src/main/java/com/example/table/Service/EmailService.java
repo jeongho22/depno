@@ -29,7 +29,7 @@ public class EmailService {
         mailSender.send(message);
     }
 
-    //2. 메일 저장 내용 (DB)
+    //2. 메일 저장 (DB)
     public void saveMailHistory(Long employeeId, String email) {
         emailRepository.saveMailHistory(employeeId, email);
     }
