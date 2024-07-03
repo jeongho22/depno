@@ -20,27 +20,27 @@ public class EmailController {
     @ResponseBody
     public String sendEmail(@RequestParam Long employeeId) {
 
-        EmployeeDto employee = employeeService.findById(employeeId);
+        EmployeeDto employeeDto = employeeService.findById(employeeId);
 
         String emailContent =
 
                         "직원 정보\n" +
                         "\n" +
-                        "이름 : " + employee.getEmployeeName() + "\n" +
-                        "사번 : " + employee.getDeptNo() + "\n" +
-                        "계급 : " + employee.getPosition() + "\n" +
-                        "이메일 : " + employee.getEmail() + "\n" +
-                        "전화번호 : " + employee.getPhoneNm();
+                        "이름 : " + employeeDto.getEmployeeName() + "\n" +
+                        "사번 : " + employeeDto.getDeptNo() + "\n" +
+                        "계급 : " + employeeDto.getPosition() + "\n" +
+                        "이메일 : " + employeeDto.getEmail() + "\n" +
+                        "전화번호 : " + employeeDto.getPhoneNm();
 
 
         EmailDto emailDto = new EmailDto();
-        emailDto.setToEmail(employee.getEmail());    // 메일 ID
-        emailDto.setSubject(employee.getEmployeeName() + "님의 정보 내역 입니다."); // 메일 제목
+        emailDto.setToEmail(employeeDto.getEmail());    // 메일 ID
+        emailDto.setSubject(employeeDto.getEmployeeName() + "님의 정보 내역 입니다."); // 메일 제목
         emailDto.setText(emailContent);              // 메일 내용
         emailDto.setEmployeeId(employeeId);          // 직원 번호
 
         emailService.sendEmployeeInfo(emailDto);
-        emailService.saveMailHistory(employeeId, employee.getEmail());
+        emailService.saveMailHistory(employeeId, employeeDto.getEmail());
 
         int emailCount = emailService.countMailHistoryByEmployeeId(employeeId);
         emailDto.setEmailCount(emailCount);

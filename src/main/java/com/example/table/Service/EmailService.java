@@ -22,11 +22,11 @@ public class EmailService {
     // 1. 메일 발송 내역
     public void sendEmployeeInfo(EmailDto emailDto) {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromEmail);
-        message.setTo(emailDto.getToEmail());
-        message.setSubject(emailDto.getSubject());
-        message.setText(emailDto.getText());
-        mailSender.send(message);
+        message.setFrom(fromEmail);                // 보내는 사람
+        message.setTo(emailDto.getToEmail());      // 받는 사람
+        message.setSubject(emailDto.getSubject()); // 제목
+        message.setText(emailDto.getText());       // 내용
+        mailSender.send(message);                  // 보내기
     }
 
     //2. 메일 저장 (DB)
