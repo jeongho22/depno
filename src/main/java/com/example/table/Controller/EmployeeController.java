@@ -62,13 +62,15 @@ public class EmployeeController {
         model.addAttribute("totalPages", totalPages);
 
 
-//        System.out.println("검색 및 정렬 기준: " + sortBy + ", 정렬 순서: " + sortOrder);
-//        System.out.println("검색 유형:" + searchType);
-//        System.out.println("검색어:" + query);
-//        System.out.println("최대 몇개씩? 보여 줄까?:" + size);
-//        System.out.println("현재 페이지 데이터 리스트:" + employeeList);
-//        System.out.println("총 데이터 개수:" + totalBoardCount);
-//        System.out.println("전체 페이지 개수 :" + totalPages);
+        System.out.println("검색 유형:" + searchType);
+        System.out.println("검색어:" + query);
+        System.out.println("최대 몇개씩? 보여 줄까?:" + size);
+        System.out.println("검색 및 정렬 기준: " + sortBy + ", 정렬 순서: " + sortOrder);
+
+        System.out.println("현재 페이지 데이터 리스트:" + employeeList);
+        System.out.println("총 데이터 개수:" + totalBoardCount);
+        System.out.println("현재 페이지 :" + page);
+        System.out.println("전체 페이지 개수 :" + totalPages);
 
         return "main";
     }
@@ -85,9 +87,9 @@ public class EmployeeController {
     @GetMapping("/detail/{id}")
     @ResponseBody
     public EmployeeDto getEmployeeById(@PathVariable Long id) {
-        EmployeeDto employee = employeeService.findById(id);
-        System.out.println(employee);
-        return employee;
+        return employeeService.findById(id);
+//        EmployeeDto employee = employeeService.findById(id);
+//        return employee;
     }
 
 
@@ -118,23 +120,28 @@ public class EmployeeController {
     @GetMapping("/download")
     public ResponseEntity<Resource> downloadFile(@RequestParam String fileName, @RequestParam String originalName) {
         try {
-            // 1. 업로드 된 파일이 해당 경로
+            // 1. 파일의 경로를 지정합니다. (저장 된 곳)
             File file = new File("C:/Users/USER/Desktop/uploading/" + fileName);
 
+            // 2. 파일이 존재하지 않으면 404 오류를 반환합니다.
             if (!file.exists()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             }
-            Resource resource = new FileSystemResource(file);
-            String encodedFileName = URLEncoder.encode(originalName, StandardCharsets.UTF_8);
-            encodedFileName = encodedFileName.replaceAll("\\+", "%20");
 
+            // 3. 파일을 Resource 객체로 변환합니다.
+            Resource resource = new FileSystemResource(file);
+
+            // 4. 파일 이름을 UTF-8로 인코딩합니다.
+            String encodedFileName = URLEncoder.encode(originalName, StandardCharsets.UTF_8).replaceAll("\\+", "%20");
+
+            // 5. HTTP 응답 헤더를 설정하고 파일을 응답 본문으로 전송합니다.
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + encodedFileName)
                     .body(resource);
 
         } catch (Exception e) {
+            // 6. 서버 오류가 발생하면 500 오류를 반환합니다.
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-
 }

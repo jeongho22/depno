@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -89,6 +90,7 @@ public class EmployeeService {
     //3. 직원 상세 정보
     public EmployeeDto findById(Long id) {
         EmployeeDto employee = employeeRepository.findById(id);
+
         if (employee != null) {
             List<FileDto> files = employeeRepository.findFilesByEmployeeId(id);
             if (files != null && !files.isEmpty()) {
@@ -145,7 +147,7 @@ public class EmployeeService {
                 }
             }
         }
-        handleFileUpload(employeeDto);
+        handleFileUpload(employeeDto); // 수정쪽에서 파일 업로드 할때
 
 
         // 파일 삭제 후 남아 있는 파일 확인하여 fileAttached 업데이트
@@ -224,5 +226,6 @@ public class EmployeeService {
         int dotIndex = filename.lastIndexOf('.');
         return (dotIndex == -1) ? "" : filename.substring(dotIndex);
     }
+
 
 }

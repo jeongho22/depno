@@ -92,6 +92,7 @@
             <th>이메일</th>
             <th>등록일</th>
             <th>수정일</th>
+            <th>직원정보 메일발송</th>
 
         </tr>
         </thead>
@@ -106,6 +107,9 @@
                 <td>${employee.email}</td>
                 <td>${employee.createdAt}</td>
                 <td>${employee.modifiedAt}</td>
+                <td>
+                    <button class="btn btn-info" onclick="sendEmail(${employee.id})">메일 발송</button>
+                </td>
             </tr>
         </c:forEach>
         </tbody>
@@ -173,7 +177,7 @@
                         </div>
                         <div class="form-group">
                             <label for="employFile">파일 추가</label>
-                            <input type="file" class="form-control" id="employFile" name="employFile" multiple onchange="handleFileSelect(this)">
+                            <input type="file" class="form-control" id="employFile" name="employFile" multiple onchange="handleFileSelect(this, 'register')">
                         </div>
                         <div id="fileList" class="form-group"></div>
                         <button type="button" class="btn btn-primary" onclick="submitForm()">등록</button>
@@ -265,11 +269,13 @@
                             <label for="updateEmail">이메일</label>
                             <input type="text" class="form-control" id="updateEmail" name="email">
                         </div>
+
                         <div class="form-group">
                             <label for="updateEmployFile">파일 추가</label>
-                            <input type="file" class="form-control" id="updateEmployFile" name="employFile" multiple onchange="handleUpdateFileSelect(this)">
+                            <input type="file" class="form-control" id="updateEmployFile" name="employFile" multiple onchange="handleFileSelect(this, 'update')">
                         </div>
                         <div id="updateFileList" class="form-group"></div>
+
                         <div class="form-group">
                             <label for="filesToDelete">기존 파일 삭제</label>
                             <div id="filesToDelete"></div>
@@ -291,13 +297,32 @@
 
 <script>
 
+
     // 전역 배열을 초기화
-    selectedFiles = [];
-    // 전역 배열을 초기화
-    selectedUpdateFiles = [];
+    var selectedFiles = { register: [], update: [] };
+
+    // 0. 데이터 오름 차순, 내림 차순 함수
+    function sortData() {
+        var sortOrder = $('#sortOrder').val();
+        var sortBy = $('#sortBy').val();
+        $('#sortOrderHidden').val(sortOrder);
+        $('#sortByHidden').val(sortBy);
+        $('#searchForm').submit();
+    }
 
 
-    // 1. 직원 등록
+    // 0. 페이지 Size 함수 (5,10,15,20,50)
+    function changeItemsPerPage() {
+        var size = $('#itemsPerPage').val();
+        var searchType = $('#searchType').val();
+        var query = $('#query').val();
+        var sortOrder = $('#sortOrderHidden').val();
+        var sortBy = $('#sortByHidden').val();
+        window.location.href = "${pageContext.request.contextPath}/list?page=1&searchType=" + searchType + "&query=" + query + "&size=" + size + "&sortOrder=" + sortOrder + "&sortBy=" + sortBy;
+    }
+
+
+    // 1. 직원 등록 버튼
     function submitForm() {
 
         var employeeName = $("#employeeName").val();
@@ -340,7 +365,7 @@
 
         // 전역 배열에 저장된 파일을 폼 데이터에 추가
         formData.delete('employFile'); // 기존 파일 삭제
-        selectedFiles.forEach(function(file) {
+        selectedFiles['register'].forEach(function(file) {
             formData.append('employFile', file);
         });
 
@@ -368,7 +393,7 @@
                 type: "GET",
                 url: "${pageContext.request.contextPath}/detail/" + id,
                 success: function(response) {
-                    console.log("Employee Detail Response:", response); // 디버깅을 위해 응답 데이터를 콘솔에 출력
+                    console.log("직원 세부 정보:", response); // 디버깅을 위해 응답 데이터를 콘솔에 출력
                     $('#detailDeptNo').text(response.deptNo);
                     $('#detailEmployeeName').text(response.employeeName);
                     $('#detailPosition').text(response.position);
@@ -378,15 +403,19 @@
 
                     // 파일 목록 표시
                     var filesHtml = "";
+
                     if (response.files) {
                         response.files.forEach(function(file) {
                             filesHtml += '<a href="${pageContext.request.contextPath}/download?fileName=' + file.saveName + '&originalName=' + file.originalName + '">' + file.originalName + '</a><br>';
+                            console.log(file.saveName);
+                            console.log(file.originalName);
                         });
                     }
+                    console.log("파일 다운로드 URL :" + filesHtml);
                     $('#detailFiles').html(filesHtml);
                 },
                 error: function(error) {
-                    console.log("Error:", error); // 디버깅을 위해 오류를 콘솔에 출력
+                    console.log("Error:", error);
                     alert("오류가 발생했습니다. 상세 정보를 불러올 수 없습니다.");
                 }
             });
@@ -395,7 +424,6 @@
 
 
     // 3-1. 직원 수정 모달창
-    // 기존 파일을 표시하고 삭제할 수 있도록 수정 모달 열기
     function openUpdateModal() {
         var selectedEmployee = $('.employee-select:checked');
         if (selectedEmployee.length != 1) {
@@ -473,9 +501,10 @@
 
         // 전역 배열에 저장된 파일을 폼 데이터에 추가
         formData.delete('employFile'); // 기존 파일 삭제
-        selectedUpdateFiles.forEach(function(file) {
+        selectedFiles['update'].forEach(function(file) {
             formData.append('employFile', file);
         });
+
 
         $.ajax({
             type: "POST",
@@ -528,8 +557,8 @@
 
     // 5. 직원 번호 중복 확인
     function checkDuplicate(formId) {
-        var form = $('#' + formId);
 
+        var form = $('#' + formId);
         var deptNo = form.find('[name="deptNo"]').val();
         var deptNoPattern = /^\d{3}$/;
 
@@ -560,65 +589,42 @@
         });
     }
 
-
-    // 6. 등록 업로드 파일 List 보관
-    function handleFileSelect(input) {
+    //6. 등록,수정 업로드 파일 List
+    function handleFileSelect(input, type) {
         var files = input.files;
-        var fileList = $('#fileList');
+        var fileList = type === 'register' ? $('#fileList') : $('#updateFileList');
 
         // 선택된 파일을 전역 배열에 추가
         for (var i = 0; i < files.length; i++) {
-            selectedFiles.push(files[i]);
+            selectedFiles[type].push(files[i]);
         }
 
         // 파일 목록을 UI에 업데이트
         fileList.empty();
-        for (var i = 0; i < selectedFiles.length; i++) {
-            fileList.append('<div id="file-' + i + '">' + selectedFiles[i].name + ' <button type="button" class="btn btn-danger btn-sm" onclick="removeFile(' + i + ')">X</button></div>');
+        for (var i = 0; i < selectedFiles[type].length; i++) {
+            fileList.append('<div id="file-' + type + '-' + i + '">' + selectedFiles[type][i].name + ' <button type="button" class="btn btn-danger btn-sm" onclick="removeFile(' + i + ', \'' + type + '\')">X</button></div>');
         }
     }
 
-    // 7. 수정 업로드 파일 List 보관
-    function handleUpdateFileSelect(input) {
-        var files = input.files;
-        var fileList = $('#updateFileList');
-
-        // 선택된 파일을 전역 배열에 추가
-        for (var i = 0; i < files.length; i++) {
-            selectedUpdateFiles.push(files[i]);
-        }
+    // 7. 등록,수정 업로드 파일 삭제
+    function removeFile(index, type) {
+        selectedFiles[type].splice(index, 1); // 선택된 파일 목록에서 제거
 
         // 파일 목록을 UI에 업데이트
+        var fileList = type === 'register' ? $('#fileList') : $('#updateFileList');
         fileList.empty();
-        for (var i = 0; i < selectedUpdateFiles.length; i++) {
-            fileList.append('<div id="update-file-' + i + '">' + selectedUpdateFiles[i].name + ' <button type="button" class="btn btn-danger btn-sm" onclick="removeUpdateFile(' + i + ')">X</button></div>');
+        for (var i = 0; i < selectedFiles[type].length; i++) {
+            fileList.append('<div id="file-' + type + '-' + i + '">' + selectedFiles[type][i].name + ' <button type="button" class="btn btn-danger btn-sm" onclick="removeFile(' + i + ', \'' + type + '\')">X</button></div>');
         }
     }
 
-
-    // 8. 등록 업로드 파일 삭제
-    function removeFile(index) {
-        selectedFiles.splice(index, 1); // 선택된 파일 목록에서 제거
-
-        // 파일 목록을 UI에 업데이트
-        var fileList = $('#fileList');
-        fileList.empty();
-        for (var i = 0; i < selectedFiles.length; i++) {
-            fileList.append('<div id="file-' + i + '">' + selectedFiles[i].name + ' <button type="button" class="btn btn-danger btn-sm" onclick="removeFile(' + i + ')">X</button></div>');
-        }
-    }
-
-
-    // 9. 수정 업로드 파일 삭제
-    function removeUpdateFile(index) {
-        selectedUpdateFiles.splice(index, 1); // 선택된 파일 목록에서 제거
-
-        // 파일 목록을 UI에 업데이트
-        var fileList = $('#updateFileList');
-        fileList.empty();
-        for (var i = 0; i < selectedUpdateFiles.length; i++) {
-            fileList.append('<div id="update-file-' + i + '">' + selectedUpdateFiles[i].name + ' <button type="button" class="btn btn-danger btn-sm" onclick="removeUpdateFile(' + i + ')">X</button></div>');
-        }
+    //8. 메일 발송
+    function sendEmail(employeeId) {
+        $.post("/send-email", {employeeId: employeeId}, function(response) {
+            alert(response);
+            var emailCount = response.split(": ")[1];
+            $("#emailCount-" + employeeId).text(emailCount);
+        });
     }
 
 </script>
