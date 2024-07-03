@@ -35,7 +35,7 @@ public class EmailService {
     }
 
 
-    //3. 메일 보낸 횟수
+    //3. 이메일 보낸 횟수
     public int countMailHistoryByEmployeeId(Long employeeId) {
         return emailRepository.countMailHistoryByEmployeeId(employeeId);
     }

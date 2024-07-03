@@ -19,20 +19,25 @@ public class EmailController {
     @PostMapping("/send-email")
     @ResponseBody
     public String sendEmail(@RequestParam Long employeeId) {
+
         EmployeeDto employee = employeeService.findById(employeeId);
 
+        String emailContent =
 
-        String emailContent = "Employee Information\n" +
-                "Name: " + employee.getEmployeeName() + "\n" +
-                "Position: " + employee.getPosition() + "\n" +
-                "Email: " + employee.getEmail() + "\n" +
-                "Phone: " + employee.getPhoneNm();
+                        "직원 정보\n" +
+                        "\n" +
+                        "이름 : " + employee.getEmployeeName() + "\n" +
+                        "사번 : " + employee.getDeptNo() + "\n" +
+                        "계급 : " + employee.getPosition() + "\n" +
+                        "이메일 : " + employee.getEmail() + "\n" +
+                        "전화번호 : " + employee.getPhoneNm();
+
 
         EmailDto emailDto = new EmailDto();
-        emailDto.setToEmail(employee.getEmail());
-        emailDto.setSubject("Employee Information");
-        emailDto.setText(emailContent);
-        emailDto.setEmployeeId(employeeId);
+        emailDto.setToEmail(employee.getEmail());    // 메일 ID
+        emailDto.setSubject(employee.getEmployeeName() + "님의 정보 내역 입니다."); // 메일 제목
+        emailDto.setText(emailContent);              // 메일 내용
+        emailDto.setEmployeeId(employeeId);          // 직원 번호
 
         emailService.sendEmployeeInfo(emailDto);
         emailService.saveMailHistory(employeeId, employee.getEmail());
