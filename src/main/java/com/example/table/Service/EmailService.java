@@ -18,6 +18,8 @@ public class EmailService {
     @Value("${spring.mail.username}")
     private String fromEmail;
 
+
+    // 1. 메일 발송 내역
     public void sendEmployeeInfo(EmailDto emailDto) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(fromEmail);
@@ -27,10 +29,13 @@ public class EmailService {
         mailSender.send(message);
     }
 
+    //2. 메일 저장 내용 (DB)
     public void saveMailHistory(Long employeeId, String email) {
         emailRepository.saveMailHistory(employeeId, email);
     }
 
+
+    //3. 메일 보낸 횟수
     public int countMailHistoryByEmployeeId(Long employeeId) {
         return emailRepository.countMailHistoryByEmployeeId(employeeId);
     }

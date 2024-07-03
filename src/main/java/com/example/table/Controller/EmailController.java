@@ -1,5 +1,4 @@
 package com.example.table.Controller;
-
 import com.example.table.Dto.EmailDto;
 import com.example.table.Dto.EmployeeDto;
 import com.example.table.Service.EmailService;
@@ -8,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
@@ -16,6 +14,8 @@ public class EmailController {
     private final EmployeeService employeeService;
     private final EmailService emailService;
 
+
+    // 1. 메일 발송
     @PostMapping("/send-email")
     @ResponseBody
     public String sendEmail(@RequestParam Long employeeId) {
@@ -40,6 +40,6 @@ public class EmailController {
         int emailCount = emailService.countMailHistoryByEmployeeId(employeeId);
         emailDto.setEmailCount(emailCount);
 
-        return "메일을 성공적으로 보냈습니다 : " + emailCount;
+        return "메일을 성공적으로 보냈습니다 : " + "총 "+emailCount+"건";
     }
 }

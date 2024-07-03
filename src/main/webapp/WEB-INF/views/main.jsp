@@ -108,7 +108,7 @@
                 <td>${employee.createdAt}</td>
                 <td>${employee.modifiedAt}</td>
                 <td>
-                    <button class="btn btn-info" onclick="sendEmail(${employee.id})">메일 발송</button>
+                    <button onclick="sendEmail(${employee.id})">메일 발송</button>
                 </td>
             </tr>
         </c:forEach>
