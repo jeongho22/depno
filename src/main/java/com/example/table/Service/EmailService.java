@@ -1,12 +1,19 @@
 package com.example.table.Service;
 
 import com.example.table.Dto.EmailDto;
+import com.example.table.Dto.FileDto;
 import com.example.table.Repository.EmailRepository;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+
+import java.io.File;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -19,13 +26,36 @@ public class EmailService {
     private String fromEmail;
 
 
+//    // 1. 메일 발송 내역
+//    public void sendEmployeeInfo(EmailDto emailDto) {
+//        SimpleMailMessage message = new SimpleMailMessage();
+//        message.setFrom(fromEmail);                // 보내는 사람
+//        message.setTo(emailDto.getToEmail());      // 받는 사람
+//        message.setSubject(emailDto.getSubject()); // 제목
+//        message.setText(emailDto.getText());       // 내용
+//        mailSender.send(message);                  // 보내기
+//    }
+
     // 1. 메일 발송 내역
-    public void sendEmployeeInfo(EmailDto emailDto) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromEmail);                // 보내는 사람
-        message.setTo(emailDto.getToEmail());      // 받는 사람
-        message.setSubject(emailDto.getSubject()); // 제목
-        message.setText(emailDto.getText());       // 내용
+
+    private static final String FIXED_FILE_PATH = "C:/Users/USER/Desktop/uploading/";
+    public void sendEmployeeInfo(EmailDto emailDto, List<FileDto> files) throws MessagingException {
+
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setFrom(fromEmail);                // 보내는 사람
+        helper.setTo(emailDto.getToEmail());      // 받는 사람
+        helper.setSubject(emailDto.getSubject()); // 제목
+        helper.setText(emailDto.getText(), true); // 내용 (HTML 가능)
+
+        // 첨부파일 추가
+        if (files != null) {
+            for (FileDto fileDto : files) {
+                File file = new File(FIXED_FILE_PATH + fileDto.getSaveName()); // 고정 경로와 파일명을 결합하여 File 객체 생성
+                helper.addAttachment(fileDto.getOriginalName(), file); // 첨부파일 추가
+            }
+        }
         mailSender.send(message);                  // 보내기
     }
 
