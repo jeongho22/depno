@@ -39,10 +39,11 @@ public class EmailController {
         emailDto.setText(emailContent);              // 메일 내용
         emailDto.setEmployeeId(employeeId);          // 직원 번호
 
-        emailService.sendEmployeeInfo(emailDto);
-        emailService.saveMailHistory(employeeId, employeeDto.getEmail());
+        emailService.sendEmployeeInfo(emailDto);     // 메일 내용 보내기
 
-        int emailCount = emailService.countMailHistoryByEmployeeId(employeeId);
+        emailService.saveMailHistory(employeeId, employeeDto.getEmail());   // DB 저장
+
+        int emailCount = emailService.countMailHistoryByEmployeeId(employeeId); // 메일 갯수
         emailDto.setEmailCount(emailCount);
 
         return "메일을 성공적으로 보냈습니다 : " + "총 "+emailCount+"건";

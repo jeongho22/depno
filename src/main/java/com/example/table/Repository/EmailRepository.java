@@ -12,6 +12,7 @@ public class EmailRepository {
 
     private final SqlSessionTemplate sql;
 
+    //1. 메일 저장 (DB)
     public void saveMailHistory(Long employeeId, String email) {
         Map<String, Object> params = new HashMap<>();
         params.put("employeeId", employeeId);
@@ -19,6 +20,7 @@ public class EmailRepository {
         sql.insert("email.saveMailHistory", params);
     }
 
+    //2. 이메일 보낸 횟수
     public int countMailHistoryByEmployeeId(Long employeeId) {
         return sql.selectOne("email.countMailHistoryByEmployeeId", employeeId);
     }
