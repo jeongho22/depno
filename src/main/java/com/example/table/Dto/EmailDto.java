@@ -12,5 +12,6 @@ public class EmailDto {
     private String subject;
     private String text;
     private Long employeeId;
+    private String file;
     private int emailCount;
 }

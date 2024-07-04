@@ -20,7 +20,7 @@ public class EmailController {
     @ResponseBody
     public String sendEmail(@RequestParam Long employeeId) {
 
-        EmployeeDto employeeDto = employeeService.findById(employeeId);
+        EmployeeDto employeeDto = employeeService.findById(employeeId);  // 메일 보낼 특정 대상 가져 오기
 
         String emailContent =
 
@@ -38,6 +38,8 @@ public class EmailController {
         emailDto.setSubject(employeeDto.getEmployeeName() + "님의 정보 내역 입니다."); // 메일 제목
         emailDto.setText(emailContent);              // 메일 내용
         emailDto.setEmployeeId(employeeId);          // 직원 번호
+        emailDto.setFile(employeeDto.getFiles().);
+
 
         emailService.sendEmployeeInfo(emailDto);     // 메일 내용 보내기
 
