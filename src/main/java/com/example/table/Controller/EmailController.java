@@ -33,12 +33,15 @@ public class EmailController {
         List<String> originalNames = new ArrayList<>();
 
         // 첨부 파일 반복문 돌려서 다 가져 오기
-        for (FileDto fileDto : fileList) {
-            originalNames.add(fileDto.getOriginalName());
+        if (fileList != null) {
+            for (FileDto fileDto : fileList) {
+                originalNames.add(fileDto.getOriginalName());
+            }
         }
-
         // 첨부 파일 내역 (첨부1, 첨부2, 첨부3) 콤마로 나눠줌
         String fileAttachments = String.join(", ", originalNames);
+
+
 
         String emailContent = "직원 정보\n" +
                 "\n" +
