@@ -38,7 +38,6 @@ public class EmailController {
         emailDto.setSubject(employeeDto.getEmployeeName() + "님의 정보 내역 입니다."); // 메일 제목
         emailDto.setText(emailContent);              // 메일 내용
         emailDto.setEmployeeId(employeeId);          // 직원 번호
-        emailDto.setFile(employeeDto.getFiles().);
 
 
         emailService.sendEmployeeInfo(emailDto);     // 메일 내용 보내기

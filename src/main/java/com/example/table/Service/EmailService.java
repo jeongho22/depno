@@ -29,13 +29,13 @@ public class EmailService {
         mailSender.send(message);                  // 보내기
     }
 
-    //2. 메일 저장 (DB)
+    //2. 보낸 메일 저장 (DB)
     public void saveMailHistory(Long employeeId, String email) {
         emailRepository.saveMailHistory(employeeId, email);
     }
 
 
-    //3. 이메일 보낸 횟수
+    //3. 특정 직원 에게 이메일 보낸 횟수
     public int countMailHistoryByEmployeeId(Long employeeId) {
         return emailRepository.countMailHistoryByEmployeeId(employeeId);
     }
