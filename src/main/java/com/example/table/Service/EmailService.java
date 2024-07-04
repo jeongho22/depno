@@ -41,7 +41,7 @@ public class EmailService {
     public void sendEmployeeInfo(EmailDto emailDto, List<FileDto> files) throws MessagingException {
 
         MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8"); // 첨부파일 기능
 
         helper.setFrom(fromEmail);                // 보내는 사람
         helper.setTo(emailDto.getToEmail());      // 받는 사람
