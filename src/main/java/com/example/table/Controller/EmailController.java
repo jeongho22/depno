@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,10 +29,13 @@ public class EmailController {
         // employeeDto.getFiles()가 반환하는 파일 리스트에서 originalName만 추출
         List<FileDto> fileList = employeeDto.getFiles();
 
-        // originalName만 추출하여 리스트로 저장
-        List<String> originalNames = fileList.stream()
-                .map(FileDto::getOriginalName) // FileDto 객체의 getOriginalName 메서드를 호출하여 originalName을 가져옴
-                .toList(); // 리스트로 수집
+        // originalName를 저장할 리스트 새성
+        List<String> originalNames = new ArrayList<>();
+
+        // 첨부 파일 반복문 돌려서 다 가져 오기
+        for (FileDto fileDto : fileList) {
+            originalNames.add(fileDto.getOriginalName());
+        }
 
         // 첨부 파일 내역 (첨부1, 첨부2, 첨부3) 콤마로 나눠줌
         String fileAttachments = String.join(", ", originalNames);
