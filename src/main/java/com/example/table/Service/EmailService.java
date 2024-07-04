@@ -37,8 +37,7 @@ public class EmailService {
 //    }
 
     // 1. 메일 발송 내역
-
-    private static final String FIXED_FILE_PATH = "C:/Users/USER/Desktop/uploading/";
+    private static final String FIXED_FILE_PATH = "C:/Users/USER/Desktop/uploading/";  // 내 로컬에서 파일이 저장된 고정 경로 (자기 환경에 맞게 수정)
     public void sendEmployeeInfo(EmailDto emailDto, List<FileDto> files) throws MessagingException {
 
         MimeMessage message = mailSender.createMimeMessage();
@@ -52,7 +51,7 @@ public class EmailService {
         // 첨부파일 추가
         if (files != null) {
             for (FileDto fileDto : files) {
-                File file = new File(FIXED_FILE_PATH + fileDto.getSaveName()); // 고정 경로와 파일명을 결합하여 File 객체 생성
+                File file = new File(FIXED_FILE_PATH + fileDto.getSaveName()); // 고정 경로와 저장된 파일명을 결합하여 File 객체 생성
                 helper.addAttachment(fileDto.getOriginalName(), file); // 첨부파일 추가
             }
         }
