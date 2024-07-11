@@ -1,7 +1,13 @@
 package com.example.table.Controller;
 import com.example.table.Dto.EmployeeDto;
+import com.example.table.Dto.FileDto;
 import com.example.table.Service.EmployeeService;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -12,10 +18,13 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -62,15 +71,15 @@ public class EmployeeController {
         model.addAttribute("totalPages", totalPages);
 
 
-        System.out.println("검색 유형:" + searchType);
-        System.out.println("검색어:" + query);
-        System.out.println("최대 몇개씩? 보여 줄까?:" + size);
-        System.out.println("검색 및 정렬 기준: " + sortBy + ", 정렬 순서: " + sortOrder);
-
-        System.out.println("현재 페이지 데이터 리스트:" + employeeList);
-        System.out.println("총 데이터 개수:" + totalBoardCount);
-        System.out.println("현재 페이지 :" + page);
-        System.out.println("전체 페이지 개수 :" + totalPages);
+//        System.out.println("검색 유형:" + searchType);
+//        System.out.println("검색어:" + query);
+//        System.out.println("최대 몇개씩? 보여 줄까?:" + size);
+//        System.out.println("검색 및 정렬 기준: " + sortBy + ", 정렬 순서: " + sortOrder);
+//
+//        System.out.println("현재 페이지 데이터 리스트:" + employeeList);
+//        System.out.println("총 데이터 개수:" + totalBoardCount);
+//        System.out.println("현재 페이지 :" + page);
+//        System.out.println("전체 페이지 개수 :" + totalPages);
 
         return "main";
     }
@@ -87,8 +96,6 @@ public class EmployeeController {
     @GetMapping("/detail/{id}")
     @ResponseBody
     public EmployeeDto getEmployeeById(@PathVariable Long id) {
-
-
 
         return employeeService.findById(id);
 //        EmployeeDto employee = employeeService.findById(id);
@@ -147,4 +154,5 @@ public class EmployeeController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
 }

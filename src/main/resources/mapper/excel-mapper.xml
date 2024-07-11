@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="excel">
+
+    <!-- ResultMap 정의 -->
+    <resultMap id="EmployeeDtoMap" type="com.example.table.Dto.EmployeeDto">
+        <result column="id" property="id"/>
+        <result column="DEPT_NO" property="deptNo"/>
+        <result column="Employee_name" property="employeeName"/>
+        <result column="POSITION" property="position"/>
+        <result column="EMAIL" property="email"/>
+        <result column="Phone_NM" property="phoneNm"/>
+        <result column="createdAt" property="createdAt"/>
+        <result column="modifiedAt" property="modifiedAt"/>
+        <result column="fileAttached" property="fileAttached"/>
+    </resultMap>
+
+
+
+    <!--  1. 엑셀 다운로드 조회-->
+    <!-- 페이징 없는 검색 쿼리 -->
+    <select id="searchEmployeesWithoutPaging" resultMap="EmployeeDtoMap">
+        select id,
+        DEPT_NO,
+        Employee_name,
+        POSITION,
+        EMAIL,
+        Phone_NM,
+        createdAt,
+        modifiedAt
+        from employee
+        where
+        <if test="searchType == 'all'">
+            (DEPT_NO like #{query}
+            or Employee_name like #{query}
+            or POSITION like #{query}
+            or EMAIL like #{query}
+            or date_format(modifiedAt, "%Y-%m-%d") like #{query})
+        </if>
+        <if test="searchType != 'all'">
+            <choose>
+                <when test="searchType == 'deptNo'">
+                    DEPT_NO like #{query}
+                </when>
+                <when test="searchType == 'employeeName'">
+                    Employee_name like #{query}
+                </when>
+                <when test="searchType == 'position'">
+                    POSITION like #{query}
+                </when>
+                <when test="searchType == 'email'">
+                    EMAIL like #{query}
+                </when>
+                <when test="searchType == 'modifiedAt'">
+                    date_format(modifiedAt, "%Y-%m-%d") like #{query}
+                </when>
+            </choose>
+        </if>
+        order by
+        <choose>
+            <when test="sortBy == 'deptNo'">
+                DEPT_NO ${sortOrder}
+            </when>
+            <when test="sortBy == 'createdAt'">
+                createdAt ${sortOrder}
+            </when>
+            <when test="sortBy == 'modifiedAt'">
+                modifiedAt ${sortOrder}
+            </when>
+        </choose>,
+        id desc
+    </select>
+
+</mapper>

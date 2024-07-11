@@ -236,12 +236,13 @@
     </select>
 
 
+    <!-- 10. 파일 첨부 여부 업데이트 -->
     <update id="updateFileAttached">
         update employee set fileAttached=#{fileAttached} where id=#{id}
     </update>
 
 
-
+    <!-- 11. 파일 삭제 -->
     <delete id="deleteFile">
         DELETE FROM file WHERE id = #{id}
     </delete>

@@ -23,6 +23,8 @@
         <button type="button" class="btn btn-secondary mr-2" onclick="openUpdateModal()">수정</button>
         <button type="button" class="btn btn-danger mr-2" onclick="deleteEmployee()">삭제</button>
         <button type="button" class="btn btn-info mr-2" onclick="window.location.href='${pageContext.request.contextPath}/list'">목록</button>
+        <button type="button" class="btn btn-success mr-2" onclick="downloadExcel()">다운로드</button>
+        <button type="button" class="btn btn-warning mr-2" data-toggle="modal" data-target="#uploadModal">일괄등록</button>
 
 
 
@@ -188,8 +190,7 @@
     </div>
 
 
-
-    <!-- Detail Modal -->
+    <!-- 직원 세부 조회 모달-->
     <div class="modal" id="detailModal">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -232,6 +233,7 @@
             </div>
         </div>
     </div>
+
 
     <!-- 수정 모달 -->
     <div class="modal" id="updateModal">
@@ -286,6 +288,29 @@
             </div>
         </div>
     </div>
+
+
+    <!-- 엑셀 업로드 모달 -->
+    <div class="modal" id="uploadModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">직원정보 일괄등록</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="uploadForm" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="uploadFile">직원정보를 일괄 등록하기 위한 엑셀파일을 선택해주세요.</label>
+                            <input type="file" class="form-control" id="uploadFile" name="uploadFile" accept=".xlsx">
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="submitUploadForm()">등록</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
 
 </div>
@@ -626,6 +651,50 @@
             $("#emailCount-" + employeeId).text(emailCount);
         });
     }
+
+    //9. 엑셀 다운로드
+    function downloadExcel() {
+        var searchType = $('#searchType').val();
+        var query = $('#query').val();
+        var sortOrder = $('#sortOrderHidden').val();
+        var sortBy = $('#sortByHidden').val();
+
+        window.location.href = "/downloadExcel?searchType=" + searchType + "&query=" + query + "&sortOrder=" + sortOrder + "&sortBy=" + sortBy;
+    }
+
+    //10. 엑셀 업로드
+    function submitUploadForm() {
+        var formData = new FormData($("#uploadForm")[0]);
+
+        $.ajax({
+            type: "POST",
+            url: "${pageContext.request.contextPath}/uploadExcel",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                var successCount = response.successCount;
+                var failCount = response.failCount;
+                var errorMessages = response.errorMessages;
+
+                var message = "성공: " + successCount + "건, 실패: " + failCount + "건\n";
+                if (failCount > 0) {
+                    message += "실패 내역:\n";
+                    for (var i = 0; i < errorMessages.length; i++) {
+                        message += errorMessages[i] + "\n";
+                    }
+                }
+                alert(message);
+                location.reload();
+            },
+            error: function(error) {
+                alert("오류가 발생했습니다. 다시 시도해주세요.");
+            }
+        });
+    }
+
+
+
 
 </script>
 </body>

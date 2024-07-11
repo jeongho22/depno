@@ -24,4 +24,5 @@ public class EmployeeDto {
     private List<MultipartFile> employFile; // 다중 파일 업로드를 위한 필드
     private List<FileDto> files;        // 업로드된 파일 목록
     private List<Long> filesToDelete;   // 삭제할 파일 ID 목록
+    private int emailCount;
 }

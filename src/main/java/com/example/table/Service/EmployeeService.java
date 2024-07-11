@@ -20,6 +20,8 @@ import java.util.stream.Collectors;
 public class EmployeeService {
 
     private final EmployeeRepository employeeRepository;
+    private final EmailService emailService;
+
     // 정규표현식 패턴 정의
     private static final Pattern NAME_PATTERN = Pattern.compile("^[a-zA-Zㄱ-힣]{1,10}$");
     private static final Pattern PHONE_PATTERN = Pattern.compile("^[0-9]{2,3}-[0-9]{3,4}-[0-9]{4}$");
